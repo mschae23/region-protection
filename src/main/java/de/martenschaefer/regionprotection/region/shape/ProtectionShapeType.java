@@ -1,7 +1,7 @@
 package de.martenschaefer.regionprotection.region.shape;
 
 import net.minecraft.registry.Registry;
-import de.martenschaefer.regionprotection.RegionProtectionMod;
+import net.minecraft.util.Identifier;
 import de.martenschaefer.regionprotection.registry.RegionProtectionRegistries;
 import com.mojang.serialization.Codec;
 
@@ -14,7 +14,8 @@ public interface ProtectionShapeType<S extends ProtectionShape> {
     Codec<S> codec();
 
     static <S extends ProtectionShape> ProtectionShapeType<S> register(String id, Codec<S> codec) {
-        return Registry.register(RegionProtectionRegistries.PROTECTION_SHAPE, RegionProtectionMod.id(id), () -> codec);
+        // Use "serverutils" namespace for compatibility with old region data
+        return Registry.register(RegionProtectionRegistries.PROTECTION_SHAPE, new Identifier("serverutils", id), () -> codec);
     }
 
     static void init() {
