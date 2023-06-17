@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 import net.minecraft.command.CommandSource;
 import net.minecraft.registry.RegistryOps;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -15,15 +13,14 @@ import de.martenschaefer.config.api.ConfigIo;
 import de.martenschaefer.config.api.ModConfig;
 import de.martenschaefer.regionprotection.command.RegionCommand;
 import de.martenschaefer.regionprotection.config.RegionProtectionConfigV1;
-import de.martenschaefer.regionprotection.state.RegionPersistentState;
 import de.martenschaefer.regionprotection.region.RegionRuleEnforcer;
 import de.martenschaefer.regionprotection.region.RegionV2;
 import de.martenschaefer.regionprotection.region.shape.ProtectionShapeType;
 import de.martenschaefer.regionprotection.registry.RegionProtectionRegistries;
+import de.martenschaefer.regionprotection.state.RegionPersistentState;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +46,7 @@ public class RegionProtectionMod implements ModInitializer {
         ProtectionShapeType.init();
 
         // Command registration
+        //noinspection CodeBlock2Expr
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             RegionCommand.register(dispatcher);
         });
@@ -64,22 +62,18 @@ public class RegionProtectionMod implements ModInitializer {
                 RegionCommand.PERMISSIONS,
             }).flatMap(Arrays::stream);
 
-            @SuppressWarnings("MismatchedReadAndWriteOfArray")
-            String[] permissions = new String[] {
-            };
-
             Stream<String> regionPermissions = RegionPersistentState.get(server).getRegions().stream()
                 .map(RegionV2::key).flatMap(name -> Arrays.stream(RegionRuleEnforcer.RULES)
                     .map(rule -> RegionRuleEnforcer.getBasePermission(name, rule)));
 
-            Stream.concat(Stream.concat(commandPermissions, Arrays.stream(permissions)), regionPermissions)
+            Stream.concat(commandPermissions, regionPermissions)
                 .forEach(permission -> Permissions.check(source, MODID + permission));
         });
 
         RegionPersistentState.init();
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({ "deprecation", "RedundantSuppression", "SwitchStatementWithTooFewBranches" })
     private static ModConfig.Type<RegionProtectionConfigV1, ?> getConfigType(int version) {
         return new ModConfig.Type<>(version, switch (version) {
             default -> RegionProtectionConfigV1.TYPE_CODEC;
