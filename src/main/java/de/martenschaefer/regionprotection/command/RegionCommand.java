@@ -97,6 +97,7 @@ public final class RegionCommand {
         ".command.region.info",
         ".command.region.test",
         ".command.region.list",
+        ".command.region.stats",
     };
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -193,7 +194,10 @@ public final class RegionCommand {
                     .executes(RegionCommand::executeTestGeneric)))
             .then(CommandManager.literal("list")
                 .requires(Permissions.require(RegionProtectionMod.MODID + ".command.region.list", true))
-                .executes(RegionCommand::executeList)));
+                .executes(RegionCommand::executeList))
+            .then(CommandManager.literal("stats")
+                .requires(Permissions.require(RegionProtectionMod.MODID + ".command.region.stats", true))
+                .executes(RegionCommand::executeStats)));
     }
 
     private static int executeAddWithUniversal(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -337,19 +341,6 @@ public final class RegionCommand {
         }
     }
 
-    private static int executeList(CommandContext<ServerCommandSource> context) {
-        ServerCommandSource source = context.getSource();
-        RegionPersistentState regionState = RegionPersistentState.get(source.getServer());
-
-        source.sendFeedback(() -> Text.empty()
-            .append(Text.literal("Regions:\n"))
-            .append(Text.literal(regionState.getRegions().stream()
-                .map(RegionV2::key).map(key -> " - " + key)
-                .collect(Collectors.joining("\n")))), false);
-
-        return Command.SINGLE_SUCCESS;
-    }
-
     private static int executeTest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         return executeTestInternal(context, true);
     }
@@ -402,6 +393,27 @@ public final class RegionCommand {
                 .collect(Collectors.joining("\n"))))
             .append("\n\nRules:").append(rulesText), false);
 
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int executeList(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+        RegionPersistentState regionState = RegionPersistentState.get(source.getServer());
+
+        source.sendFeedback(() -> Text.empty()
+            .append(Text.literal("Regions:\n"))
+            .append(Text.literal(regionState.getRegions().stream()
+                .map(RegionV2::key).map(key -> " - " + key)
+                .collect(Collectors.joining("\n")))), false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int executeStats(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+        RegionPersistentState regionState = RegionPersistentState.get(source.getServer());
+
+        source.sendFeedback(() -> Text.literal("Cache: ").append(regionState.getCacheStatsText()), false);
         return Command.SINGLE_SUCCESS;
     }
 

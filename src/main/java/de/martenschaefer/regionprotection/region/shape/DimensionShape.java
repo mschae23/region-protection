@@ -36,6 +36,10 @@ public final class DimensionShape implements ProtectionShape {
         return this.dimension.getValue().equals(dimension.getValue());
     }
 
+    public boolean intersects(ProtectionShape other) {
+        return other.testDimension(this.dimension);
+    }
+
     @Override
     public MutableText display() {
         return Text.literal(this.dimension.getValue().toString()).formatted(Formatting.YELLOW);

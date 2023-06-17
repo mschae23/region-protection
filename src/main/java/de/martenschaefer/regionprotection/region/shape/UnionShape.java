@@ -7,6 +7,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.world.World;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 public final class UnionShape implements ProtectionShape {
     public static final Codec<UnionShape> CODEC = ProtectionShape.CODEC.listOf().xmap(UnionShape::new, union -> Arrays.asList(union.scopes));
@@ -26,6 +27,11 @@ public final class UnionShape implements ProtectionShape {
         return ProtectionShapeType.UNION;
     }
 
+    // package-private for RegionShapes; do not modify returned array
+    ProtectionShape[] getScopes() {
+        return this.scopes;
+    }
+
     @Override
     public boolean test(ProtectionContext context) {
         for (ProtectionShape shape : this.scopes) {
@@ -41,6 +47,17 @@ public final class UnionShape implements ProtectionShape {
     public boolean testDimension(RegistryKey<World> dimension) {
         for (ProtectionShape shape : this.scopes) {
             if (shape.testDimension(dimension)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean intersects(ProtectionShape other) {
+        for (ProtectionShape shape : this.scopes) {
+            if (shape.intersects(other)) {
                 return true;
             }
         }
@@ -74,6 +91,11 @@ public final class UnionShape implements ProtectionShape {
             return Text.literal("()");
         }
         return Text.literal(this.scopes.length + " combined shapes");
+    }
+
+    @Override
+    public Stream<ProtectionShape> flatStream() {
+        return Arrays.stream(this.scopes).flatMap(ProtectionShape::flatStream);
     }
 
     @Override

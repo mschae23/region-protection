@@ -8,6 +8,8 @@ import net.fabricmc.fabric.api.util.TriState;
 import de.martenschaefer.regionprotection.ModUtils;
 import de.martenschaefer.regionprotection.RegionProtectionMod;
 import de.martenschaefer.regionprotection.region.shape.ProtectionContext;
+import de.martenschaefer.regionprotection.region.shape.UnionShape;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -84,7 +86,8 @@ public final class SortedRegionHashMap implements RegionMap {
     }
 
     @Override
-    public TriState checkRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule) {
+    @Nullable
+    public Pair<RegionV2, TriState> findRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule) {
         CachedPermissionData permissions = ModUtils.getLuckPerms().getPlayerAdapter(ServerPlayerEntity.class).getPermissionData(player);
         String prefix = RegionProtectionMod.MODID + ".region.";
         String suffix = "." + rule.getName();
@@ -95,12 +98,16 @@ public final class SortedRegionHashMap implements RegionMap {
                 result = result == TriState.DEFAULT ? region.getRule(rule) : result;
 
                 if (result != TriState.DEFAULT) {
-                    return result;
+                    return Pair.of(region, result);
                 }
             }
         }
 
-        return TriState.DEFAULT;
+        return null;
+    }
+
+    public Stream<RegionV2> findIntersectingRegions(UnionShape shape) {
+        return this.regions.stream().filter(region -> region.shapes().intersects(shape));
     }
 
     @Override

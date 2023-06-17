@@ -1,15 +1,16 @@
 package de.martenschaefer.regionprotection.region.shape;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public final class BoxShape implements ProtectionShape {
     public static final Codec<BoxShape> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -44,6 +45,35 @@ public final class BoxShape implements ProtectionShape {
     @Override
     public boolean testDimension(RegistryKey<World> dimension) {
         return dimension.getValue().equals(this.dimension.getValue());
+    }
+
+    public boolean testOnlyPosition(Vec3d pos) {
+        return pos.x >= this.min.getX() && pos.x < (this.max.getX() + 1)
+            && pos.y >= this.min.getY() && pos.y < (this.max.getY() + 1)
+            && pos.z >= this.min.getZ() && pos.z < (this.max.getZ() + 1);
+    }
+
+    @Override
+    public boolean intersects(ProtectionShape other) {
+        if (other.testDimension(this.dimension)) {
+            if (other instanceof UnionShape union) {
+                for (ProtectionShape shape : union.getScopes()) {
+                    if (this.intersects(shape)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            } else if (other instanceof BoxShape box) {
+                return this.min.getX() <= box.max.getX() && this.max.getX() >= box.min.getX()
+                    && this.min.getY() <= box.max.getY() && this.max.getY() >= box.min.getY()
+                    && this.min.getZ() <= box.max.getZ() && this.max.getZ() >= box.min.getZ();
+            } else {
+                throw new IllegalArgumentException("Unknown other protection shape (from BoxShape)");
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override

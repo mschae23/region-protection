@@ -6,6 +6,7 @@ import java.util.stream.StreamSupport;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.fabricmc.fabric.api.util.TriState;
 import de.martenschaefer.regionprotection.region.shape.ProtectionContext;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,12 +37,11 @@ public interface RegionMap extends Iterable<RegionV2> {
 
     Stream<RegionV2> findRegion(ProtectionContext context);
 
-    TriState checkRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule);
+    Pair<RegionV2, TriState> findRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule);
 
     TriState checkRegionGeneric(ProtectionContext context, ProtectionRule rule);
 
     default Stream<RegionV2> stream() {
         return StreamSupport.stream(this.spliterator(), false);
     }
-
 }

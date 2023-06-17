@@ -1,5 +1,6 @@
 package de.martenschaefer.regionprotection.region.shape;
 
+import java.util.stream.Stream;
 import com.mojang.serialization.Codec;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.MutableText;
@@ -7,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import de.martenschaefer.regionprotection.registry.RegionProtectionRegistries;
 
-public interface ProtectionShape {
+public sealed interface ProtectionShape permits BoxShape, DimensionShape, UnionShape, UniversalShape {
     Codec<ProtectionShape> CODEC = RegionProtectionRegistries.PROTECTION_SHAPE.getCodec().dispatch(ProtectionShape::getType, ProtectionShapeType::codec);
 
     ProtectionShapeType<?> getType();
@@ -16,9 +17,15 @@ public interface ProtectionShape {
 
     boolean testDimension(RegistryKey<World> dimension);
 
+    boolean intersects(ProtectionShape other);
+
     MutableText display();
 
     MutableText displayShort();
+
+    default Stream<ProtectionShape> flatStream() {
+        return Stream.of(this);
+    }
 
     default ProtectionShape union(ProtectionShape other) {
         return union(this, other);

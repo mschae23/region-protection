@@ -19,13 +19,9 @@ public class RegionShapes {
     public RegionShapes(Entry... entries) {
         this.entries = entries;
 
-        ProtectionShape[] shapes = new ProtectionShape[entries.length];
-
-        for (int i = 0; i < shapes.length; i++) {
-            shapes[i] = entries[i].shape;
-        }
-
-        this.combinedShape = new UnionShape(shapes);
+        this.combinedShape = new UnionShape(Arrays.stream(entries)
+            .map(Entry::shape).flatMap(ProtectionShape::flatStream)
+            .toArray(ProtectionShape[]::new));
     }
 
     private RegionShapes(List<Entry> entries) {
@@ -42,6 +38,11 @@ public class RegionShapes {
 
     public Entry[] getEntries() {
         return this.entries;
+    }
+
+    // Do not modify the returned array!
+    public ProtectionShape[] getFlatShapes() {
+        return this.combinedShape.getScopes();
     }
 
     public RegionShapes withShape(String name, ProtectionShape shape) {
@@ -84,6 +85,11 @@ public class RegionShapes {
         }
 
         return index;
+    }
+
+    public boolean intersects(UnionShape shape) {
+        ProtectionShape other = shape.getScopes().length == 1 ? shape.getScopes()[0] : shape;
+        return this.combinedShape.intersects(other);
     }
 
     public Text displayList() {

@@ -31,6 +31,11 @@ public final class UniversalShape implements ProtectionShape {
     }
 
     @Override
+    public boolean intersects(ProtectionShape other) {
+        return true;
+    }
+
+    @Override
     public MutableText display() {
         return Text.literal("Universal").formatted(Formatting.YELLOW);
     }

@@ -95,7 +95,7 @@ public final class RegionRuleEnforcer {
             ProtectionContext context = new ProtectionContext(dimension, pos);
             RegionPersistentState regionState = RegionPersistentState.get(serverPlayer.getServerWorld().getServer());
 
-            TriState result = regionState.checkRegion(context, serverPlayer, rule);
+            TriState result = regionState.checkPlayerRegion(serverPlayer, context, rule);
             return result == TriState.FALSE ? ActionResult.FAIL : ActionResult.PASS;
         }
 

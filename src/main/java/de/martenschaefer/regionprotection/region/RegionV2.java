@@ -19,7 +19,7 @@ public record RegionV2(String key, int level, RegionShapes shapes, Reference2Ref
         Codec.STRING.fieldOf("key").forGetter(region -> region.key),
         Codec.INT.fieldOf("level").forGetter(region -> region.level),
         RegionShapes.CODEC.fieldOf("shapes").forGetter(region -> region.shapes),
-        ProtectionRule.Entry.CODEC.listOf().fieldOf("rules").forGetter(RegionV2::rulesAsList)
+        ProtectionRule.Entry.CODEC.listOf().fieldOf("rules").forGetter(RegionV2::rulesForEncode)
     ).apply(instance, RegionV2::new));
 
     public static final ModConfig.Type<RegionV2, RegionV2> TYPE = new ModConfig.Type<>(2, TYPE_CODEC);
@@ -66,8 +66,10 @@ public record RegionV2(String key, int level, RegionShapes shapes, Reference2Ref
         return this.rules.getOrDefault(rule, TriState.DEFAULT);
     }
 
-    private List<ProtectionRule.Entry> rulesAsList() {
-        return this.rules.entrySet().stream().map(entry -> new ProtectionRule.Entry(entry.getKey(), entry.getValue())).toList();
+    private List<ProtectionRule.Entry> rulesForEncode() {
+        return this.rules.entrySet().stream()
+            .filter(entry -> entry.getValue() != TriState.DEFAULT) // Default values are not worth saving
+            .map(entry -> new ProtectionRule.Entry(entry.getKey(), entry.getValue())).toList();
     }
 
     public Text rulesForDisplay() {

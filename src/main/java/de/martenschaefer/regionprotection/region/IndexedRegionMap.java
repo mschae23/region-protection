@@ -8,6 +8,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.World;
 import net.fabricmc.fabric.api.util.TriState;
 import de.martenschaefer.regionprotection.region.shape.ProtectionContext;
+import de.martenschaefer.regionprotection.region.shape.UnionShape;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMaps;
@@ -46,13 +48,34 @@ public final class IndexedRegionMap implements RegionMap {
     }
 
     @Override
-    public TriState checkRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule) {
+    @Nullable
+    public Pair<RegionV2, TriState> findRegion(ProtectionContext context, ServerPlayerEntity player, ProtectionRule rule) {
         SortedRegionHashMap map = this.byDimension.get(context.dimension());
 
         if (map != null) {
-            return map.checkRegion(context, player, rule);
+            return map.findRegion(context, player, rule);
         } else {
-            return TriState.DEFAULT;
+            return null;
+        }
+    }
+
+    public Stream<RegionV2> findIntersectingRegions(RegistryKey<World> dimension, UnionShape shape) {
+        SortedRegionHashMap map = this.byDimension.get(dimension);
+
+        if (map != null) {
+            return map.findIntersectingRegions(shape);
+        } else {
+            return Stream.empty();
+        }
+    }
+
+    public Stream<RegionV2> getRegionsInDimension(RegistryKey<World> dimension) {
+        SortedRegionHashMap map = this.byDimension.get(dimension);
+
+        if (map != null) {
+            return map.stream();
+        } else {
+            return Stream.empty();
         }
     }
 
