@@ -1,0 +1,38 @@
+{
+  "chat": {
+    "enabled": true
+  },
+  "region": {
+    "enabled": true
+  },
+  "command": {
+    "pos": {
+      "in_public_chat": true
+    }
+  },
+  "vote": {
+    "permission_prefix": "vote"
+  },
+  "container_lock": {
+    "enabled": true,
+    "data_key": "LockPermission",
+    "key_permission_prefix": "key"
+  },
+  "misc": {
+    "death_coords": {
+      "enabled": true,
+      "in_public_chat": true
+    },
+    "broadcast_entity_death": {
+      "enabled": true
+    },
+    "enable_gamemode_switcher": {
+      "permission": "minecraft.command.gamemode"
+    },
+    "item_frame": {
+      "enabled": true,
+      "invisibility_item": "minecraft:glass_pane"
+    }
+  },
+  "version": 5
+}

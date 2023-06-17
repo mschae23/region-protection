@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.martenschaefer.regionprotection.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BlockItemMixin",
+    "CreeperEntityMixin",
+    "EndPortalBlockMixin",
+    "EntityMixin",
+    "FindPointOfInterestTaskMixin",
+    "ForgetCompletedPointOfInterestTaskMixin",
+    "PlayerEntityMixin",
+    "ServerPlayerEntityMixin",
+    "ServerPlayerInteractionManagerMixin",
+    "ServerWorldMixin",
+    "TntBlockMixin",
+    "shape.ServerPlayerEntityMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

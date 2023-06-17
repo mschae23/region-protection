@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "regionprotection",
+  "version": "${version}",
+
+  "name": "Region Protection",
+  "description": "Protects regions.",
+  "authors": [
+    "mschae23"
+  ],
+  "contact": {
+  },
+
+  "license": "LGPLv3",
+  "icon": "assets/regionprotection/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "de.martenschaefer.regionprotection.RegionProtectionMod"
+    ]
+  },
+  "mixins": [
+    "regionprotection.mixins.json"
+  ],
+  "accessWidener": "regionprotection.accesswidener",
+
+  "depends": {
+    "fabricloader": ">=0.14.6",
+    "fabric": "*",
+    "minecraft": ">=1.20",
+    "java": ">=17",
+    "luckperms": "^5.4.0"
+  },
+  "suggests": {
+  }
+}
