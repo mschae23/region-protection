@@ -64,6 +64,8 @@ public final class BoxShape implements ProtectionShape {
                 }
 
                 return false;
+            } else if (other instanceof UniversalShape || other instanceof DimensionShape) {
+                return true;
             } else if (other instanceof BoxShape box) {
                 return this.min.getX() <= box.max.getX() && this.max.getX() >= box.min.getX()
                     && this.min.getY() <= box.max.getY() && this.max.getY() >= box.min.getY()
