@@ -71,7 +71,7 @@ public final class BoxShape implements ProtectionShape {
                     && this.min.getY() <= box.max.getY() && this.max.getY() >= box.min.getY()
                     && this.min.getZ() <= box.max.getZ() && this.max.getZ() >= box.min.getZ();
             } else {
-                throw new IllegalArgumentException("Unknown other protection shape (from BoxShape)");
+                throw new IllegalArgumentException("Unknown other protection shape (from BoxShape): " + other);
             }
         } else {
             return false;
