@@ -106,6 +106,7 @@ public final class RegionCommand {
             .then(CommandManager.literal("add")
                 .requires(Permissions.require(RegionProtectionMod.MODID + ".command.region.add", true))
                 .then(CommandManager.argument("name", StringArgumentType.word())
+                    .executes(RegionCommand::executeAddEmpty)
                     .then(CommandManager.literal("with")
                         .then(CommandManager.literal("universal")
                             .executes(RegionCommand::executeAddWithUniversal))
@@ -198,6 +199,10 @@ public final class RegionCommand {
             .then(CommandManager.literal("stats")
                 .requires(Permissions.require(RegionProtectionMod.MODID + ".command.region.stats", true))
                 .executes(RegionCommand::executeStats)));
+    }
+
+    private static int executeAddEmpty(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        return addRegion(context, UnaryOperator.identity(), true);
     }
 
     private static int executeAddWithUniversal(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {

@@ -12,6 +12,7 @@
     "ExplosionBehaviorMixin",
     "FindPointOfInterestTaskMixin",
     "ForgetCompletedPointOfInterestTaskMixin",
+    "IronGolemEntityMixin",
     "PlayerEntityMixin",
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerMixin",

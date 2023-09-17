@@ -61,6 +61,10 @@ public final class RegionRuleEnforcer {
         return onEventGeneric(world, Vec3d.ofCenter(pos), ProtectionRule.VillagerHome);
     }
 
+    public static ActionResult onSpawnIronGolem(ServerWorld world, BlockPos pos) {
+        return onEventGeneric(world, Vec3d.ofCenter(pos), ProtectionRule.EntitySpawnIronGolem);
+    }
+
     public static ActionResult onPlayerPvp(ServerPlayerEntity player, Vec3d pos) {
         return onEvent(player, pos, ProtectionRule.PlayerPvp);
     }

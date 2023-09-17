@@ -20,6 +20,7 @@ public enum ProtectionRule implements StringIdentifiable {
     PortalEndUse("portal.end.use"),
     VillagerWork("villager.work"),
     VillagerHome("villager.home"),
+    EntitySpawnIronGolem("entity.spawn.iron_golem"),
     PlayerPvp("player.pvp"),
     ExplosionIgnite("explosion.ignite"),
     ExplosionDestroy("explosion.destroy");
