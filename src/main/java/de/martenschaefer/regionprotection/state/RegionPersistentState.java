@@ -1,6 +1,7 @@
 package de.martenschaefer.regionprotection.state;
 
 import java.util.stream.Stream;
+import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -158,7 +159,7 @@ public final class RegionPersistentState extends PersistentState {
 
     public static RegionPersistentState get(MinecraftServer server) {
         PersistentStateManager stateManager = server.getOverworld().getPersistentStateManager();
-        return stateManager.getOrCreate(RegionPersistentState::readNbt, RegionPersistentState::new, ID);
+        return stateManager.getOrCreate(new PersistentState.Type<>(RegionPersistentState::new, RegionPersistentState::readNbt, DataFixTypes.LEVEL), ID);
     }
 
     public static void init() {
