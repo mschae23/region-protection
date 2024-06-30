@@ -17,7 +17,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "de.martenschaefer.regionprotection.RegionProtectionMod"
+      "de.mschae23.regionprotection.RegionProtectionMod"
     ]
   },
   "mixins": [

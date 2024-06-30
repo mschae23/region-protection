@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'fabric-loom' version '1.7-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -46,8 +46,8 @@ dependencies {
         "fabric-events-interaction-v0"
     ].forEach { modImplementation fabricApi.module(it, project.fabric_api_version) }
 
-    modImplementation "de.martenschaefer:codec-config-api:${project.codec_config_api_version}"
-    include "de.martenschaefer:codec-config-api:${project.codec_config_api_version}"
+    modImplementation "de.mschae23:codec-config-api:${project.codec_config_api_version}"
+    include "de.mschae23:codec-config-api:${project.codec_config_api_version}"
 
     modImplementation "net.luckperms:api:${project.luckperms_api_version}"
     modImplementation "me.lucko:fabric-permissions-api:${project.permission_api_version}"
@@ -85,9 +85,8 @@ java {
 }
 
 jar {
-    from('LICENSE') {
-        rename { "${it}_${project.archivesBaseName}"}
-    }
+    from('COPYING')
+    from('COPYING.LESSER')
 }
 
 publishing {
