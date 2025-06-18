@@ -11,10 +11,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.block.WireOrientation;
 import net.minecraft.world.explosion.Explosion;
 import de.mschae23.regionprotection.RegionProtectionMod;
 import de.mschae23.regionprotection.region.RegionRuleEnforcer;
@@ -30,32 +30,43 @@ public class TntBlockMixin extends Block {
         super(settings);
     }
 
-    @Inject(method = "primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/world/World;DDDLnet/minecraft/entity/LivingEntity;)Lnet/minecraft/entity/TntEntity;", ordinal = 0), cancellable = true)
-    private static void injectBeforeSummonTntEntity(World world, BlockPos pos, LivingEntity igniter, CallbackInfo ci) {
+    @Inject(method = "primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)Z", at = @At(value = "NEW", target = "(Lnet/minecraft/world/World;DDDLnet/minecraft/entity/LivingEntity;)Lnet/minecraft/entity/TntEntity;", ordinal = 0), cancellable = true)
+    private static void injectBeforeSummonTntEntity(World world, BlockPos pos, LivingEntity igniter, CallbackInfoReturnable<Boolean> cir) {
         if (RegionProtectionMod.getConfig().enabled() && world instanceof ServerWorld serverWorld) {
             ActionResult result = igniter instanceof ServerPlayerEntity player ?
                 RegionRuleEnforcer.onExplosionIgnite(player, pos) : RegionRuleEnforcer.onExplosionIgnite(serverWorld, pos);
 
             if (result == ActionResult.FAIL) {
-                ci.cancel();
+                cir.setReturnValue(false);
             }
         }
     }
 
-    @Inject(method = "onUseWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/TntBlock;primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)V", ordinal = 0), cancellable = true)
-    private void injectInteract(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ItemActionResult> cir) {
+    @Inject(method = "onUseWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/TntBlock;primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)Z", ordinal = 0), cancellable = true)
+    private void injectInteract(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
         if (RegionProtectionMod.getConfig().enabled() && player instanceof ServerPlayerEntity serverPlayer) {
             ActionResult result = RegionRuleEnforcer.onExplosionIgnite(serverPlayer, pos);
 
             if (result == ActionResult.FAIL) {
                 RegionRuleEnforcer.sendDeniedText(serverPlayer);
-                cir.setReturnValue(super.onUseWithItem(stack, state, world, pos, player, hand, hit));
+                cir.setReturnValue(ActionResult.PASS);
             }
         }
     }
 
     @Inject(method = "onDestroyedByExplosion", at = @At(value = "NEW", target = "(Lnet/minecraft/world/World;DDDLnet/minecraft/entity/LivingEntity;)Lnet/minecraft/entity/TntEntity;", ordinal = 0), cancellable = true)
-    private void injectDestroyedByOtherExplosion(World world, BlockPos pos, Explosion explosion, CallbackInfo ci) {
+    private void injectDestroyedByOtherExplosion(ServerWorld world, BlockPos pos, Explosion explosion, CallbackInfo ci) {
+        if (RegionProtectionMod.getConfig().enabled()) {
+            ActionResult result = RegionRuleEnforcer.onExplosionIgnite(world, pos);
+
+            if (result == ActionResult.FAIL) {
+                ci.cancel();
+            }
+        }
+    }
+
+    @Inject(method = "neighborUpdate", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)Z", ordinal = 0), cancellable = true)
+    private void injectIgnitedByRedstone(BlockState state, World world, BlockPos pos, Block sourceBlock, WireOrientation wireOrientation, boolean notify, CallbackInfo ci) {
         if (RegionProtectionMod.getConfig().enabled() && world instanceof ServerWorld serverWorld) {
             ActionResult result = RegionRuleEnforcer.onExplosionIgnite(serverWorld, pos);
 
@@ -65,18 +76,7 @@ public class TntBlockMixin extends Block {
         }
     }
 
-    @Inject(method = "neighborUpdate", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V", ordinal = 0), cancellable = true)
-    private void injectIgnitedByRedstone(BlockState state, World world, BlockPos pos, Block sourceBlock, BlockPos sourcePos, boolean notify, CallbackInfo ci) {
-        if (RegionProtectionMod.getConfig().enabled() && world instanceof ServerWorld serverWorld) {
-            ActionResult result = RegionRuleEnforcer.onExplosionIgnite(serverWorld, pos);
-
-            if (result == ActionResult.FAIL) {
-                ci.cancel();
-            }
-        }
-    }
-
-    @Inject(method = "onBlockAdded", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V", ordinal = 0), cancellable = true)
+    @Inject(method = "onBlockAdded", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)Z", ordinal = 0), cancellable = true)
     private void injectIgnitedByRedstoneWhenPlaced(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify, CallbackInfo ci) {
         if (RegionProtectionMod.getConfig().enabled() && world instanceof ServerWorld serverWorld) {
             ActionResult result = RegionRuleEnforcer.onExplosionIgnite(serverWorld, pos);
@@ -87,7 +87,7 @@ public class TntBlockMixin extends Block {
         }
     }
 
-    @Inject(method = "onProjectileHit", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)V", ordinal = 0), cancellable = true)
+    @Inject(method = "onProjectileHit", at = @At(value = "INVOKE", target = "net/minecraft/block/TntBlock.primeTnt(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/LivingEntity;)Z", ordinal = 0), cancellable = true)
     private void injectIgnitedByProjectile(World world, BlockState state, BlockHitResult hit, ProjectileEntity projectile, CallbackInfo ci) {
         if (RegionProtectionMod.getConfig().enabled() && world instanceof ServerWorld serverWorld) {
             ActionResult result = RegionRuleEnforcer.onExplosionIgnite(serverWorld, hit.getBlockPos());

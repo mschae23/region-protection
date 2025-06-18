@@ -22,7 +22,7 @@ public class ServerPlayerInteractionManagerMixin {
     @Unique
     private boolean disallowedBlockUse = false;
 
-    @Inject(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;", ordinal = 0), cancellable = true)
+    @Inject(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;", ordinal = 0), cancellable = true)
     private void injectBeforeStackUse(ServerPlayerEntity player, World world, ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         ActionResult result = RegionRuleEnforcer.onItemUse(player, hand, player.getPos());
 

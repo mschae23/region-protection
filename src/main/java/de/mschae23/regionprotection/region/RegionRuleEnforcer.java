@@ -95,9 +95,9 @@ public final class RegionRuleEnforcer {
 
     public static ActionResult onEvent(PlayerEntity player, Vec3d pos, ProtectionRule rule) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
-            RegistryKey<World> dimension = serverPlayer.getServerWorld().getRegistryKey();
+            RegistryKey<World> dimension = serverPlayer.getWorld().getRegistryKey();
             ProtectionContext context = new ProtectionContext(dimension, pos);
-            RegionPersistentState regionState = RegionPersistentState.get(serverPlayer.getServerWorld().getServer());
+            RegionPersistentState regionState = RegionPersistentState.get(serverPlayer.getWorld().getServer());
 
             TriState result = regionState.checkPlayerRegion(serverPlayer, context, rule);
             return result == TriState.FALSE ? ActionResult.FAIL : ActionResult.PASS;

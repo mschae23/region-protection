@@ -2,12 +2,7 @@ package de.mschae23.regionprotection.state;
 
 import java.util.stream.Stream;
 import net.minecraft.datafixer.DataFixTypes;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -15,13 +10,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
+import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.util.TriState;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
 import de.mschae23.regionprotection.ModUtils;
-import de.mschae23.regionprotection.RegionProtectionMod;
 import de.mschae23.regionprotection.region.IndexedRegionMap;
 import de.mschae23.regionprotection.region.ProtectionRule;
 import de.mschae23.regionprotection.region.RegionMap;
@@ -30,20 +28,34 @@ import de.mschae23.regionprotection.region.RegionV2;
 import de.mschae23.regionprotection.region.cache.PlayerRegionCache;
 import de.mschae23.regionprotection.region.shape.ProtectionContext;
 import de.mschae23.regionprotection.region.shape.UnionShape;
-import de.mschae23.regionprotection.region.v1.RegionV1;
-import com.mojang.datafixers.util.Pair;
 import net.luckperms.api.event.node.NodeMutateEvent;
 import org.jetbrains.annotations.Nullable;
 
 public final class RegionPersistentState extends PersistentState {
     public static final String ID = "serverutils_region"; // RegionProtectionMod.MODID + "_region";
 
+    public static final Codec<RegionPersistentState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+        RegionV2.REGION_CODEC.xmap(ModConfig::latest, r -> r).listOf().xmap(regions -> {
+            IndexedRegionMap map = new IndexedRegionMap();
+
+            for (RegionV2 region: regions) {
+                map.add(region);
+            }
+
+            return map;
+        }, map -> map.stream().toList()).fieldOf("regions").forGetter(state -> state.regions)
+    ).apply(instance, instance.stable(RegionPersistentState::new)));
+
     private final IndexedRegionMap regions;
     private final PlayerRegionCache playerRegionCache;
 
-    private RegionPersistentState() {
-        this.regions = new IndexedRegionMap();
+    private RegionPersistentState(IndexedRegionMap regions) {
+        this.regions = regions;
         this.playerRegionCache = new PlayerRegionCache();
+    }
+
+    private RegionPersistentState() {
+        this(new IndexedRegionMap());
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -112,43 +124,6 @@ public final class RegionPersistentState extends PersistentState {
             .append(Text.literal(String.valueOf(this.playerRegionCache.getCacheMisses())).formatted(Formatting.RED));
     }
 
-    @Override
-    public NbtCompound writeNbt(NbtCompound root, RegistryWrapper.WrapperLookup wrapperLookup) {
-        NbtList regions = new NbtList();
-
-        for (RegionV2 region : this.regions) {
-            var result = RegionV2.REGION_CODEC.encodeStart(NbtOps.INSTANCE, region);
-            result.ifSuccess(regions::add)
-                .ifError(error -> RegionProtectionMod.LOGGER.error("Error writing region data as persistent state: " + error));
-        }
-
-        root.put("regions", regions);
-        return root;
-    }
-
-    private static RegionPersistentState readNbt(NbtCompound root, RegistryWrapper.WrapperLookup wrapperLookup) {
-        RegionPersistentState regionState = new RegionPersistentState();
-
-        NbtList regions = root.getList("regions", NbtElement.COMPOUND_TYPE);
-
-        for (NbtElement regionElement : regions) {
-            RegionV2.REGION_CODEC.decode(NbtOps.INSTANCE, regionElement)
-                .map(Pair::getFirst)
-                .map(ModConfig::latest)
-                .ifSuccess(regionState::addRegion)
-                .ifError(error ->
-                    // Fallback to old region format
-                    RegionV1.OLD_CODEC.codec().decode(NbtOps.INSTANCE, regionElement)
-                        .map(Pair::getFirst)
-                        .map(RegionV1::latest)
-                        .ifSuccess(regionState::addRegion)
-                        .ifError(partialOld -> RegionProtectionMod.LOGGER.error("Error reading region data as persistent state: " + error))
-                );
-        }
-
-        return regionState;
-    }
-
     public void onWorldLoad(ServerWorld world) {
         this.regions.addDimension(world.getRegistryKey());
     }
@@ -159,7 +134,7 @@ public final class RegionPersistentState extends PersistentState {
 
     public static RegionPersistentState get(MinecraftServer server) {
         PersistentStateManager stateManager = server.getOverworld().getPersistentStateManager();
-        return stateManager.getOrCreate(new PersistentState.Type<>(RegionPersistentState::new, RegionPersistentState::readNbt, DataFixTypes.LEVEL), ID);
+        return stateManager.getOrCreate(new PersistentStateType<>(ID, RegionPersistentState::new, CODEC, DataFixTypes.LEVEL));
     }
 
     public static void init() {

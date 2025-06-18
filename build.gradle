@@ -1,25 +1,23 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom' version '1.10-SNAPSHOT'
     id 'maven-publish'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
 
 repositories {
     mavenLocal()
 
     maven {
-        // name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/mschae23/codec-config-api")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-        }
+        url = uri('https://code.mschae23.de/api/packages/mschae23/maven')
     }
 
     maven {
@@ -89,21 +87,40 @@ jar {
     from('COPYING.LESSER')
 }
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.util.Optional
+import java.nio.file.Path
+
 publishing {
     publications {
-        gpr(MavenPublication) {
+        mod(MavenPublication) {
             from components.java
         }
     }
 
     repositories {
         maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/mschae23/minecraft-server-utils")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            name = "Forgejo"
+            url = uri("https://code.mschae23.de/api/packages/mschae23/maven")
+
+            credentials(HttpHeaderCredentials) {
+                final token = Optional.ofNullable(System.getenv("XDG_CONFIG_HOME")).map { Path.of(it).resolve("packages") }.or {
+                    Optional.ofNullable(System.getenv("HOME")).map { Path.of(it).resolve(".config/packages") }}.or {
+                    Optional.ofNullable(System.getenv("HOMEDRIVE")).flatMap { drive -> Optional.ofNullable(System.getenv("HOMEPATH"))
+                        .map { drive + it }}.map { Path.of(it).resolve(".packages") }}.map {
+                    it.resolve("mschae23-forgejo.token") }.filter { Files.exists(it) }.map {
+                    Files.readString(it, StandardCharsets.UTF_8)
+                }.orElse("")
+
+                name = "Authorization"
+                value = "token $token"
+            }
+
+            authentication {
+                header(HttpHeaderAuthentication)
             }
         }
+
     }
 }
