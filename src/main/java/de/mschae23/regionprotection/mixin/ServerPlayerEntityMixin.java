@@ -26,28 +26,38 @@ import de.mschae23.regionprotection.RegionProtectionMod;
 import de.mschae23.regionprotection.region.RegionRuleEnforcer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin {
-    @Redirect(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;shouldDamagePlayer(Lnet/minecraft/entity/player/PlayerEntity;)Z"))
-    private boolean redirectIsPvpEnabled(ServerPlayerEntity player, PlayerEntity attacker) {
+    @Inject(method = "shouldDamagePlayer", at = @At("HEAD"))
+    private void injectIsPvpEnabled(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if (!RegionProtectionMod.getConfig().enabled()) {
-            return player.shouldDamagePlayer(attacker);
+            return;
         }
 
-        ActionResult result = RegionRuleEnforcer.onPlayerPvp(player, player.getEntityPos());
+        ServerPlayerEntity attacker = (ServerPlayerEntity) (Object) this;
 
-        if (result == ActionResult.FAIL) {
-            return false;
-        } else if (attacker instanceof ServerPlayerEntity serverAttacker) {
-            result = RegionRuleEnforcer.onPlayerPvpSendDenied(serverAttacker, attacker.getEntityPos());
+        ActionResult attackerResult = RegionRuleEnforcer.onPlayerPvp(attacker, attacker.getEntityPos());
 
-            if (result == ActionResult.FAIL) {
-                return false;
+        if (attackerResult == ActionResult.FAIL) {
+            RegionRuleEnforcer.sendDeniedText(attacker);
+            cir.setReturnValue(false);
+            return;
+        } else if (player instanceof ServerPlayerEntity serverPlayer) {
+            ActionResult attackedResult = RegionRuleEnforcer.onPlayerPvp(serverPlayer, player.getEntityPos());
+
+            if (attackedResult == ActionResult.FAIL) {
+                RegionRuleEnforcer.sendDeniedText(attacker);
+                cir.setReturnValue(false);
+                return;
+            }
+
+            if (attackerResult == ActionResult.SUCCESS && attackedResult == ActionResult.SUCCESS) {
+                cir.setReturnValue(true);
+                return;
             }
         }
-
-        return player.shouldDamagePlayer(attacker);
     }
 }
