@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2026  mschae23
+ *
+ * This file is part of Region protection.
+ *
+ * Region protection is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package de.mschae23.regionprotection.region;
 
 import java.util.Arrays;
@@ -95,9 +114,9 @@ public final class RegionRuleEnforcer {
 
     public static ActionResult onEvent(PlayerEntity player, Vec3d pos, ProtectionRule rule) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
-            RegistryKey<World> dimension = serverPlayer.getWorld().getRegistryKey();
+            RegistryKey<World> dimension = serverPlayer.getEntityWorld().getRegistryKey();
             ProtectionContext context = new ProtectionContext(dimension, pos);
-            RegionPersistentState regionState = RegionPersistentState.get(serverPlayer.getWorld().getServer());
+            RegionPersistentState regionState = RegionPersistentState.get(serverPlayer.getEntityWorld().getServer());
 
             TriState result = regionState.checkPlayerRegion(serverPlayer, context, rule);
             return result == TriState.FALSE ? ActionResult.FAIL : ActionResult.PASS;

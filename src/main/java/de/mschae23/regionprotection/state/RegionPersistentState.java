@@ -1,25 +1,46 @@
+/*
+ * Copyright (C) 2026  mschae23
+ *
+ * This file is part of Region protection.
+ *
+ * Region protection is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package de.mschae23.regionprotection.state;
 
 import java.util.stream.Stream;
-import net.minecraft.datafixer.DataFixTypes;
+import net.minecraft.datafixer.DataFixType;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.util.TriState;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.mschae23.config.api.ModConfig;
 import de.mschae23.regionprotection.ModUtils;
+import de.mschae23.regionprotection.RegionProtectionMod;
 import de.mschae23.regionprotection.region.IndexedRegionMap;
 import de.mschae23.regionprotection.region.ProtectionRule;
 import de.mschae23.regionprotection.region.RegionMap;
@@ -32,7 +53,7 @@ import net.luckperms.api.event.node.NodeMutateEvent;
 import org.jetbrains.annotations.Nullable;
 
 public final class RegionPersistentState extends PersistentState {
-    public static final String ID = "serverutils_region"; // RegionProtectionMod.MODID + "_region";
+    public static final Identifier ID = RegionProtectionMod.id("region");
 
     public static final Codec<RegionPersistentState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         RegionV2.REGION_CODEC.xmap(ModConfig::latest, r -> r).listOf().xmap(regions -> {
@@ -134,12 +155,12 @@ public final class RegionPersistentState extends PersistentState {
 
     public static RegionPersistentState get(MinecraftServer server) {
         PersistentStateManager stateManager = server.getOverworld().getPersistentStateManager();
-        return stateManager.getOrCreate(new PersistentStateType<>(ID, RegionPersistentState::new, CODEC, DataFixTypes.LEVEL));
+        return stateManager.getOrCreate(new PersistentStateType<>(ID, RegionPersistentState::new, CODEC, DataFixType.LEVEL));
     }
 
     public static void init() {
-        ServerWorldEvents.LOAD.register((server, world) -> RegionPersistentState.get(server).onWorldLoad(world));
-        ServerWorldEvents.UNLOAD.register((server, world) -> RegionPersistentState.get(server).onWorldUnload(world));
+        ServerLevelEvents.LOAD.register((server, world) -> RegionPersistentState.get(server).onWorldLoad(world));
+        ServerLevelEvents.UNLOAD.register((server, world) -> RegionPersistentState.get(server).onWorldUnload(world));
 
         RegionRuleEnforcer.init();
 

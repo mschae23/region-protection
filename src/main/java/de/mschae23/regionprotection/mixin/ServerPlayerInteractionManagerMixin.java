@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2026  mschae23
+ *
+ * This file is part of Region protection.
+ *
+ * Region protection is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package de.mschae23.regionprotection.mixin;
 
 import net.minecraft.block.BlockState;
@@ -24,7 +43,7 @@ public class ServerPlayerInteractionManagerMixin {
 
     @Inject(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;", ordinal = 0), cancellable = true)
     private void injectBeforeStackUse(ServerPlayerEntity player, World world, ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        ActionResult result = RegionRuleEnforcer.onItemUse(player, hand, player.getPos());
+        ActionResult result = RegionRuleEnforcer.onItemUse(player, hand, player.getEntityPos());
 
         if (result == ActionResult.FAIL) {
             RegionRuleEnforcer.sendDeniedText(player);

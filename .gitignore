@@ -6,22 +6,3 @@ classes/
 
 # Fabric
 run/
-
-# IntelliJ IDEA
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Eclipse
-*.launch
-
-# VS Code
-.settings/
-.vscode/
-bin/
-.classpath
-.project
-
-# macOS
-*.DS_Store

@@ -1,10 +1,7 @@
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
 }
-
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
 
 version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
@@ -17,7 +14,11 @@ repositories {
     mavenLocal()
 
     maven {
-        url = uri('https://code.mschae23.de/api/packages/mschae23/maven')
+        url = uri('https://pkg.mschae23.de/maven')
+    }
+
+    maven {
+        url = 'https://repo.codemc.io/repository/relativitymc/'
     }
 
     maven {
@@ -31,7 +32,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    mappings "org.relativitymc:modern-yarn:$project.yarn_mappings:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     [
@@ -63,11 +64,13 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
-    it.options.release = 17
+    it.options.release = 21
 }
 
 loom {
+    useIntermediateMappings = true
+    intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+
     accessWidenerPath = file('src/main/resources/regionprotection.accesswidener')
 
     decompilers {
@@ -87,11 +90,6 @@ jar {
     from('COPYING.LESSER')
 }
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.util.Optional
-import java.nio.file.Path
-
 publishing {
     publications {
         mod(MavenPublication) {
@@ -102,15 +100,15 @@ publishing {
     repositories {
         maven {
             name = "Forgejo"
-            url = uri("https://code.mschae23.de/api/packages/mschae23/maven")
+            url = uri("https://pkg.mschae23.de/maven")
 
             credentials(HttpHeaderCredentials) {
-                final token = Optional.ofNullable(System.getenv("XDG_CONFIG_HOME")).map { Path.of(it).resolve("packages") }.or {
-                    Optional.ofNullable(System.getenv("HOME")).map { Path.of(it).resolve(".config/packages") }}.or {
-                    Optional.ofNullable(System.getenv("HOMEDRIVE")).flatMap { drive -> Optional.ofNullable(System.getenv("HOMEPATH"))
-                        .map { drive + it }}.map { Path.of(it).resolve(".packages") }}.map {
-                    it.resolve("mschae23-forgejo.token") }.filter { Files.exists(it) }.map {
-                    Files.readString(it, StandardCharsets.UTF_8)
+                final token = java.util.Optional.ofNullable(System.getenv("XDG_CONFIG_HOME")).map { java.nio.file.Path.of(it).resolve("packages") }.or {
+                    java.util.Optional.ofNullable(System.getenv("HOME")).map { java.nio.file.Path.of(it).resolve(".config/packages") }}.or {
+                    java.util.Optional.ofNullable(System.getenv("HOMEDRIVE")).flatMap { drive -> java.util.Optional.ofNullable(System.getenv("HOMEPATH"))
+                        .map { drive + it }}.map { java.nio.file.Path.of(it).resolve(".packages") }}.map {
+                    it.resolve("mschae23-forgejo.token") }.filter { java.nio.file.Files.exists(it) }.map {
+                    java.nio.file.Files.readString(it, java.nio.charset.StandardCharsets.UTF_8)
                 }.orElse("")
 
                 name = "Authorization"
@@ -121,6 +119,5 @@ publishing {
                 header(HttpHeaderAuthentication)
             }
         }
-
     }
 }
